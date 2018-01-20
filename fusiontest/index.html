@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<head>
+  <title>Fusion Table Test</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+	  width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+    #banner {
+      background-color: #004976;
+      min-width: 300px;
+      width: 100%;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    #location {
+      color: #eee;
+      font-family: Georgia, serif;
+      font-size: 2.5rem;
+      text-align: center;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="banner">
+    <div id="location"></div>
+  </div>
+</body>
+
+<script type="text/javascript">
+    (function() {
+      function handleDomContentLoaded(event) {
+        // This is a good place to show a loading or branding image while
+        // the ad loads.
+        initFusion();
+      }
+
+      function initFusion() {
+        if (navigator.geolocation) {
+          console.log('Geolocation: Supported');
+
+          var geoSuccess = function(position) {
+
+            // Builds a Fusion Tables SQL query and hands the result to  dataHandler
+            var queryUrlHead = 'https://www.googleapis.com/fusiontables/v2/query?sql=';
+            var queryUrlTail = '&key=AIzaSyDUY5oIcpqVhuQA5aOO5TLzehKQRsGg6C0';
+            var tableId = '1d3R1nb_wHL_QFjTeOgneawo3huytTbJChMpWl82D';
+
+            var query = "SELECT 'Name' FROM " + tableId + " WHERE ST_INTERSECTS(Area,CIRCLE(LATLNG(" + position.coords.latitude + "," + position.coords.longitude + "),1)) LIMIT 1";
+            var queryurl = encodeURI(queryUrlHead + query + queryUrlTail); 
+
+            var httpRequest = new XMLHttpRequest()
+            httpRequest.onreadystatechange = function(event) {
+              var currentTarget = event.currentTarget;
+              var location = "Uttabys?";
+              if (currentTarget.readyState === 4) {
+                var response = currentTarget.response;
+                if (currentTarget.status === 200) {
+                  console.log('Fusion: Request successful');
+                  location = response.rows[0][0];
+                } else {
+                  console.log('Fustion: Request failed');
+                }
+                
+                document.getElementById('location').innerHTML = location;
+              }
+            }
+            httpRequest.responseType = 'json';
+            httpRequest.open('GET', queryurl);
+            httpRequest.send();
+          };
+          var geoError = function(error) {
+            console.log('Geolocation: Error code: ' + error.code);
+            // error.code can be:
+            //   0: unknown error
+            //   1: permission denied
+            //   2: position unavailable (error response from location provider)
+            //   3: timed out
+          };
+          navigator.geolocation.getCurrentPosition(geoSuccess, geoError);
+        } else {
+          console.log('Geolocation not supported - fallback to default');
+        }
+      }
+
+      window.addEventListener('DOMContentLoaded', handleDomContentLoaded, false);
+    })();
+  </script>
+</body>
